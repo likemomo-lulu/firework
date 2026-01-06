@@ -41,6 +41,7 @@
             text-align: center;
             pointer-events: none;
             animation: pulse 2s ease-in-out infinite;
+            width: 100%;
         }
 
         /* 中间大文字 - 温馨灯牌效果 */
@@ -152,6 +153,25 @@
             .fireworkType {
                 font-size: 11px;
                 padding: 3px 8px;
+            }
+
+            /* 横屏模式 */
+            @media (orientation: landscape) {
+                .hint {
+                    bottom: 40px;
+                    font-size: 11px;
+                }
+
+                .fireworkSelector {
+                    bottom: 12px;
+                    gap: 5px;
+                    max-width: 98%;
+                }
+
+                .fireworkType {
+                    font-size: 10px;
+                    padding: 2px 6px;
+                }
             }
         }
 
@@ -857,53 +877,53 @@
 
         // ===== 交互事件 =====
 
-        // 双击检测变量
-        let lastClickTime = 0;
-        const doubleClickDelay = 300; // 双击间隔（毫秒）
+        // 三连击检测变量
+        let clickCount = 0;
+        let clickTimer = null;
+        const tripleClickDelay = 500; // 500ms内点击3次
 
-        // 点击/触摸发射
-        canvas.addEventListener('click', (e) => {
-            const currentTime = Date.now();
+        // 统一处理点击和触摸事件
+        function handleClick(x, y) {
+            clickCount++;
 
-            // 检测双击
-            if (currentTime - lastClickTime < doubleClickDelay) {
-                // 双击 - 切换全屏
+            // 清除之前的定时器
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+            }
+
+            // 设置新的定时器
+            clickTimer = setTimeout(() => {
+                // 超时后重置点击计数
+                clickCount = 0;
+            }, tripleClickDelay);
+
+            // 检测三连击
+            if (clickCount === 3) {
+                // 三连击 - 切换全屏
                 toggleFullscreen();
-                lastClickTime = 0; // 重置，防止三次点击触发两次双击
+                clickCount = 0;
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
                 return;
             }
 
-            lastClickTime = currentTime;
+            // 单击/双击 - 发射烟花
+            createFirework(x, y);
+            createClickEffect(x, y);
+        }
 
-            // 单击 - 发射烟花
-            createFirework(e.clientX, e.clientY);
-
-            // 点击反馈 - 在点击位置创建即时爆炸效果
-            createClickEffect(e.clientX, e.clientY);
+        // 鼠标点击事件
+        canvas.addEventListener('click', (e) => {
+            handleClick(e.clientX, e.clientY);
         });
 
         // 触摸事件（移动端）
-        let lastTouchTime = 0;
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
-            const currentTime = Date.now();
-
-            // 检测双击
-            if (currentTime - lastTouchTime < doubleClickDelay) {
-                // 双击 - 切换全屏
-                toggleFullscreen();
-                lastTouchTime = 0;
-                return;
-            }
-
-            lastTouchTime = currentTime;
-
-            // 单击 - 发射烟花
-            createFirework(touch.clientX, touch.clientY);
-
-            // 触摸反馈
-            createClickEffect(touch.clientX, touch.clientY);
+            handleClick(touch.clientX, touch.clientY);
         });
 
         /**
@@ -1025,9 +1045,9 @@
         document.addEventListener('fullscreenchange', () => {
             const hint = document.querySelector('.hint');
             if (document.fullscreenElement) {
-                hint.textContent = '✨ 单击发射 · 双击退出全屏 · ESC退出 ✨';
+                hint.textContent = '✨ 单击发射 · 三连击或ESC退出全屏 ✨';
             } else {
-                hint.textContent = '✨ 单击发射烟花 · 双击切换全屏 ✨';
+                hint.textContent = '✨ 单击发射烟花 · 三连击切换全屏 ✨';
             }
         });
 
