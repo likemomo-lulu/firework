@@ -105,7 +105,7 @@
             pointer-events: auto;
             flex-wrap: wrap;
             justify-content: center;
-            max-width: 90%;
+            width: 100%;
         }
 
         .fireworkType {
@@ -135,8 +135,9 @@
         /* 移动端优化 */
         @media (max-width: 768px) {
             .hint {
-                bottom: 55px;
+                bottom: 50px;
                 font-size: 12px;
+                width: 100%;
             }
 
             .centerText {
@@ -147,7 +148,7 @@
             .fireworkSelector {
                 bottom: 15px;
                 gap: 6px;
-                max-width: 95%;
+                width: 100%;
             }
 
             .fireworkType {
@@ -160,12 +161,13 @@
                 .hint {
                     bottom: 40px;
                     font-size: 11px;
+                    width: 100%;
                 }
 
                 .fireworkSelector {
-                    bottom: 12px;
+                    bottom: 15px;
                     gap: 5px;
-                    max-width: 98%;
+                    width: 100%;
                 }
 
                 .fireworkType {
@@ -178,8 +180,9 @@
         /* 超小屏幕（手机竖屏） */
         @media (max-width: 480px) {
             .hint {
-                bottom: 60px;
+                bottom: 50px;
                 font-size: 11px;
+                width: 100%;
             }
 
             .centerText {
@@ -188,8 +191,9 @@
             }
 
             .fireworkSelector {
-                bottom: 12px;
+                bottom: 15px;
                 gap: 4px;
+                width: 100%;
             }
 
             .fireworkType {
@@ -204,7 +208,7 @@
     <canvas id="fireworksCanvas"></canvas>
 
     <!-- 底部提示 -->
-    <div class="hint">✨ 单击发射烟花 · 双击切换全屏 ✨</div>
+    <div class="hint">✨ 单击发射烟花 · 三连击切换全屏 ✨</div>
 
     <!-- 烟花类型选择器 -->
     <div class="fireworkSelector" id="fireworkSelector"></div>
