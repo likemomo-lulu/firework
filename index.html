@@ -208,7 +208,7 @@
     <canvas id="fireworksCanvas"></canvas>
 
     <!-- 底部提示 -->
-    <div class="hint">✨ 单击发射烟花 · 左右滑动切换全屏 ✨</div>
+    <div class="hint">✨ 单击发射烟花 · 长按切换全屏 ✨</div>
 
     <!-- 烟花类型选择器 -->
     <div class="fireworkSelector" id="fireworkSelector"></div>
@@ -881,48 +881,99 @@
 
         // ===== 交互事件 =====
 
-        // 滑动手势检测变量
-        let touchStartX = 0;
-        let touchStartY = 0;
-        const swipeThreshold = 50; // 滑动阈值50px
+        // 长按检测变量
+        let longPressTimer = null;
+        let longPressX = 0;
+        let longPressY = 0;
+        let isLongPressTriggered = false;
+        const longPressDelay = 3000; // 长按3秒切换全屏
 
-        // 鼠标点击事件 - 发射烟花
-        canvas.addEventListener('click', (e) => {
-            createFirework(e.clientX, e.clientY);
-            createClickEffect(e.clientX, e.clientY);
+        // 鼠标按下
+        canvas.addEventListener('mousedown', (e) => {
+            longPressX = e.clientX;
+            longPressY = e.clientY;
+            isLongPressTriggered = false;
+
+            // 启动长按定时器
+            longPressTimer = setTimeout(() => {
+                isLongPressTriggered = true;
+                // 长按触发 - 切换全屏
+                toggleFullscreen();
+            }, longPressDelay);
         });
 
-        // 触摸开始
-        canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-        }, { passive: true });
-
-        // 触摸结束
-        canvas.addEventListener('touchend', (e) => {
-            const touch = e.changedTouches[0];
-            const touchEndX = touch.clientX;
-            const touchEndY = touch.clientY;
-
-            // 计算滑动距离
-            const diffX = touchEndX - touchStartX;
-            const diffY = touchEndY - touchStartY;
-
-            // 判断是否是水平滑动（水平移动距离大于垂直移动距离）
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                // 检查是否达到滑动阈值
-                if (Math.abs(diffX) > swipeThreshold) {
-                    // 左滑或右滑 - 切换全屏
-                    toggleFullscreen();
-                    return;
-                }
+        // 鼠标松开
+        canvas.addEventListener('mouseup', (e) => {
+            // 清除长按定时器
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
             }
 
-            // 如果不是滑动手势，则发射烟花
-            createFirework(touchEndX, touchEndY);
-            createClickEffect(touchEndX, touchEndY);
+            // 如果没有触发长按，则发射烟花
+            if (!isLongPressTriggered) {
+                createFirework(e.clientX, e.clientY);
+                createClickEffect(e.clientX, e.clientY);
+            }
         });
+
+        // 鼠标移动 - 取消长按
+        canvas.addEventListener('mousemove', (e) => {
+            // 如果移动距离超过10px，取消长按
+            if (longPressTimer && !isLongPressTriggered) {
+                const diffX = Math.abs(e.clientX - longPressX);
+                const diffY = Math.abs(e.clientY - longPressY);
+                if (diffX > 10 || diffY > 10) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+        });
+
+        // 触摸开始（移动端）
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            longPressX = touch.clientX;
+            longPressY = touch.clientY;
+            isLongPressTriggered = false;
+
+            // 启动长按定时器
+            longPressTimer = setTimeout(() => {
+                isLongPressTriggered = true;
+                // 长按触发 - 切换全屏
+                toggleFullscreen();
+            }, longPressDelay);
+        }, { passive: true });
+
+        // 触摸结束（移动端）
+        canvas.addEventListener('touchend', (e) => {
+            // 清除长按定时器
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+
+            // 如果没有触发长按，则发射烟花
+            if (!isLongPressTriggered) {
+                const touch = e.changedTouches[0];
+                createFirework(touch.clientX, touch.clientY);
+                createClickEffect(touch.clientX, touch.clientY);
+            }
+        });
+
+        // 触摸移动 - 取消长按（移动端）
+        canvas.addEventListener('touchmove', (e) => {
+            // 如果移动距离超过10px，取消长按
+            if (longPressTimer && !isLongPressTriggered) {
+                const touch = e.touches[0];
+                const diffX = Math.abs(touch.clientX - longPressX);
+                const diffY = Math.abs(touch.clientY - longPressY);
+                if (diffX > 10 || diffY > 10) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+        }, { passive: true });
 
         /**
          * 点击反馈效果
@@ -1043,9 +1094,9 @@
         document.addEventListener('fullscreenchange', () => {
             const hint = document.querySelector('.hint');
             if (document.fullscreenElement) {
-                hint.textContent = '✨ 单击发射 · 左右滑动或ESC退出全屏 ✨';
+                hint.textContent = '✨ 单击发射 · 长按或ESC退出全屏 ✨';
             } else {
-                hint.textContent = '✨ 单击发射烟花 · 左右滑动切换全屏 ✨';
+                hint.textContent = '✨ 单击发射烟花 · 长按切换全屏 ✨';
             }
         });
 
