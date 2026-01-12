@@ -208,7 +208,7 @@
     <canvas id="fireworksCanvas"></canvas>
 
     <!-- 底部提示 -->
-    <div class="hint">✨ 单击发射烟花 · 三连击切换全屏 ✨</div>
+    <div class="hint">✨ 单击发射烟花 · 左右滑动切换全屏 ✨</div>
 
     <!-- 烟花类型选择器 -->
     <div class="fireworkSelector" id="fireworkSelector"></div>
@@ -881,53 +881,47 @@
 
         // ===== 交互事件 =====
 
-        // 三连击检测变量
-        let clickCount = 0;
-        let clickTimer = null;
-        const tripleClickDelay = 300; // 300ms内点击3次
+        // 滑动手势检测变量
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const swipeThreshold = 50; // 滑动阈值50px
 
-        // 统一处理点击和触摸事件
-        function handleClick(x, y) {
-            clickCount++;
-
-            // 清除之前的定时器
-            if (clickTimer) {
-                clearTimeout(clickTimer);
-            }
-
-            // 设置新的定时器
-            clickTimer = setTimeout(() => {
-                // 超时后重置点击计数
-                clickCount = 0;
-            }, tripleClickDelay);
-
-            // 检测三连击
-            if (clickCount === 3) {
-                // 三连击 - 切换全屏
-                toggleFullscreen();
-                clickCount = 0;
-                if (clickTimer) {
-                    clearTimeout(clickTimer);
-                    clickTimer = null;
-                }
-                return;
-            }
-
-            // 单击/双击 - 发射烟花
-            createFirework(x, y);
-            createClickEffect(x, y);
-        }
-
-        // 鼠标点击事件
+        // 鼠标点击事件 - 发射烟花
         canvas.addEventListener('click', (e) => {
-            handleClick(e.clientX, e.clientY);
+            createFirework(e.clientX, e.clientY);
+            createClickEffect(e.clientX, e.clientY);
         });
 
-        // 触摸事件（移动端）
+        // 触摸开始
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
             const touch = e.touches[0];
-            handleClick(touch.clientX, touch.clientY);
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }, { passive: true });
+
+        // 触摸结束
+        canvas.addEventListener('touchend', (e) => {
+            const touch = e.changedTouches[0];
+            const touchEndX = touch.clientX;
+            const touchEndY = touch.clientY;
+
+            // 计算滑动距离
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            // 判断是否是水平滑动（水平移动距离大于垂直移动距离）
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                // 检查是否达到滑动阈值
+                if (Math.abs(diffX) > swipeThreshold) {
+                    // 左滑或右滑 - 切换全屏
+                    toggleFullscreen();
+                    return;
+                }
+            }
+
+            // 如果不是滑动手势，则发射烟花
+            createFirework(touchEndX, touchEndY);
+            createClickEffect(touchEndX, touchEndY);
         });
 
         /**
@@ -1049,9 +1043,9 @@
         document.addEventListener('fullscreenchange', () => {
             const hint = document.querySelector('.hint');
             if (document.fullscreenElement) {
-                hint.textContent = '✨ 单击发射 · 三连击或ESC退出全屏 ✨';
+                hint.textContent = '✨ 单击发射 · 左右滑动或ESC退出全屏 ✨';
             } else {
-                hint.textContent = '✨ 单击发射烟花 · 三连击切换全屏 ✨';
+                hint.textContent = '✨ 单击发射烟花 · 左右滑动切换全屏 ✨';
             }
         });
 
